@@ -24,16 +24,19 @@ defmodule BankAPI.Accounts do
           initial_balance: changeset.changes.initial_balance,
           account_uuid: account_uuid
         }
-        |> Router.dispatch()
+        |> Router.dispatch(consistency: :strong)
 
       case dispatch_result do
         :ok ->
           {
             :ok,
-            %Account{
-              uuid: account_uuid,
-              current_balance: changeset.changes.initial_balance
-            }
+            # Following is for optimistic consistency:
+            # %Account{
+            #   uuid: account_uuid,
+            #   current_balance: changeset.changes.initial_balance
+            # }
+            # but as we have switched to consistency `:strong` we can fetch from the DB
+            get_account(account_uuid)
           }
 
         reply ->
